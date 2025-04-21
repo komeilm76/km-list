@@ -1,10 +1,34 @@
 import _ from 'lodash';
 
+type IIndexMode = 'inReserved' | 'outOfReserved';
+
+const getIndexMode = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
+  let output: IIndexMode = 'outOfReserved';
+  if (list.length == 0) {
+    output = 'outOfReserved'; // empty list
+  } // empty list
+  if (entryIndex < 0) {
+    output = 'outOfReserved'; // empty list
+  } // negative index
+  if (entryIndex >= list.length) {
+    output = 'outOfReserved'; // empty list
+  } // index out of bounds
+  if (entryIndex < list.length) {
+    output = 'inReserved'; // empty list
+  } // index out of bounds
+  return output;
+};
+
 const isValidEntryIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  if (list.length == 0) return false; // empty list
-  if (entryIndex < 0) return false; // negative index
-  if (entryIndex >= list.length) return false; // index out of bounds
-  return true; // valid index
+  let output = false;
+  if (list.length == 0) output = false; // empty list
+  else if (entryIndex < 0) output = false; // negative index
+  else if (entryIndex >= list.length) output = false; // index out of bounds
+  else {
+    output = true; // valid index
+  } // valid index
+  console.log('isValidEntryIndex', output);
+  return output;
 };
 
 const isValidEntryIndexes = <ELEM extends any>(
@@ -84,35 +108,37 @@ const removeElementBeforeThisIndex = <ELEM extends any>(list: ELEM[], entryIndex
   return removeElementAtIndexes(list, [entryIndex - 1]); // remove element at index
 };
 // insert element
-const insertElementAtIndex = <ELEM extends any>(
-  list: ELEM[],
-  entryIndex: number,
-  element: ELEM
-) => {
-  if (!isValidEntryIndex(list, entryIndex)) return list; // invalid index
-  const output = [...list];
-  output.splice(entryIndex, 0, element); // insert element at index
-  return output;
-};
-const insertElementAtLastIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
-  return insertElementAtIndex(list, list.length, element); // insert element at last index
-};
-const insertElementAtFirstIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
-  return insertElementAtIndex(list, 0, element); // insert element at first index
-};
 const insertElementAfterThisIndex = <ELEM extends any>(
   list: ELEM[],
   entryIndex: number,
   element: ELEM
 ) => {
-  return insertElementAtIndex(list, entryIndex + 1, element); // insert element at index
+  if (!isValidEntryIndex(list, entryIndex)) return list; // invalid index
+  let output = [...list];
+  // @ts-ignore
+  let listUntilEntryIndex = output.filter((item, index) => {
+    return index <= entryIndex;
+  });
+  // @ts-ignore
+  let listAfterEntryIndex = output.filter((item, index) => {
+    return index > entryIndex;
+  });
+  output = [...listUntilEntryIndex, element, ...listAfterEntryIndex] as ELEM[]; // insert element at index
+  return output;
 };
+const insertElementAtLastIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
+  return insertElementAfterThisIndex(list, list.length, element); // insert element at last index
+};
+const insertElementAtFirstIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
+  return insertElementAfterThisIndex(list, -1, element); // insert element at first index
+};
+
 const insertElementBeforeThisIndex = <ELEM extends any>(
   list: ELEM[],
   entryIndex: number,
   element: ELEM
 ) => {
-  return insertElementAtIndex(list, entryIndex - 1, element); // insert element at index
+  return insertElementAfterThisIndex(list, entryIndex - 1, element); // insert element at index
 };
 
 const isFirstElement = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
@@ -176,6 +202,7 @@ const dropElementsFromRight = <ELEM extends any>(list: ELEM[], count: number) =>
 };
 
 export default {
+  getIndexMode,
   isValidEntryIndex,
   isValidEntryIndexes,
   getValidEntryIndexes,
@@ -189,10 +216,9 @@ export default {
   removeElementAtFirstIndex,
   removeElementAfterThisIndex,
   removeElementBeforeThisIndex,
-  insertElementAtIndex,
+  insertElementAfterThisIndex,
   insertElementAtLastIndex,
   insertElementAtFirstIndex,
-  insertElementAfterThisIndex,
   insertElementBeforeThisIndex,
   isFirstElement,
   isLastElement,
