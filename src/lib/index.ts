@@ -44,7 +44,7 @@ const swapElements = <ELEM extends any>(list: ELEM[], from: number, to: number) 
   else {
     const output = [...list];
     const fromElem = output[from];
-    const toElem = output[from];
+    const toElem = output[to];
     output[from] = toElem;
     output[to] = fromElem;
     return output;
