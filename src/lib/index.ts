@@ -7,7 +7,7 @@ const isValidEntryIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) =
   return true; // valid index
 };
 
-const isValidEntryindexes = <ELEM extends any>(
+const isValidEntryIndexes = <ELEM extends any>(
   list: ELEM[],
   entryIndexes: number[],
   strict: boolean = true
@@ -27,7 +27,7 @@ const isValidEntryindexes = <ELEM extends any>(
   }
 };
 
-const getValidEntryindexes = <ELEM extends any>(list: ELEM[], entryIndexes: number[]) => {
+const getValidEntryIndexes = <ELEM extends any>(list: ELEM[], entryIndexes: number[]) => {
   if (list.length == 0) return []; // empty list
   if (entryIndexes.length == 0) return []; // empty index array
   const output = entryIndexes.filter((entryIndex) => {
@@ -63,25 +63,25 @@ const moveElementToFirstIndex = <ELEM extends any>(list: ELEM[], entryIndex: num
   return swapElements(list, entryIndex, 0);
 };
 // remove element
-const removeElementAtindexes = <ELEM extends any>(list: ELEM[], entryindexes: number[]) => {
-  if (!isValidEntryindexes(list, entryindexes)) return list; // invalid index
+const removeElementAtIndexes = <ELEM extends any>(list: ELEM[], entryIndexes: number[]) => {
+  if (!isValidEntryIndexes(list, entryIndexes)) return list; // invalid index
   const output = [...list];
   // @ts-ignore
   return output.filter((item, index) => {
-    return entryindexes.includes(index) == false;
+    return entryIndexes.includes(index) == false;
   });
 };
 const removeElementAtLastIndex = <ELEM extends any>(list: ELEM[]) => {
-  return removeElementAtindexes(list, [list.length - 1]); // remove element at last index
+  return removeElementAtIndexes(list, [list.length - 1]); // remove element at last index
 };
 const removeElementAtFirstIndex = <ELEM extends any>(list: ELEM[]) => {
-  return removeElementAtindexes(list, [0]); // remove element at first index
+  return removeElementAtIndexes(list, [0]); // remove element at first index
 };
 const removeElementAfterThisIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  return removeElementAtindexes(list, [entryIndex + 1]); // remove element at index
+  return removeElementAtIndexes(list, [entryIndex + 1]); // remove element at index
 };
 const removeElementBeforeThisIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  return removeElementAtindexes(list, [entryIndex - 1]); // remove element at index
+  return removeElementAtIndexes(list, [entryIndex - 1]); // remove element at index
 };
 // insert element
 const insertElementAtIndex = <ELEM extends any>(
@@ -147,7 +147,7 @@ const selectElements = <ELEM extends any>(
   strict: boolean = false
 ) => {
   let output = [...list] as (ELEM | undefined)[]; // copy list
-  const validEntryIndexes = getValidEntryindexes(list, entryIndexes); // get valid indexes
+  const validEntryIndexes = getValidEntryIndexes(list, entryIndexes); // get valid indexes
   if (!strict) {
     if (entryIndexes.length == 0) return []; // empty list
     output = entryIndexes.map((item) => {
@@ -177,14 +177,14 @@ const dropElementsFromRight = <ELEM extends any>(list: ELEM[], count: number) =>
 
 export default {
   isValidEntryIndex,
-  isValidEntryindexes,
-  getValidEntryindexes,
+  isValidEntryIndexes,
+  getValidEntryIndexes,
   swapElements,
   moveElementToNextIndex,
   moveElementToBackIndex,
   moveElementToLastIndex,
   moveElementToFirstIndex,
-  removeElementAtindexes,
+  removeElementAtIndexes,
   removeElementAtLastIndex,
   removeElementAtFirstIndex,
   removeElementAfterThisIndex,
