@@ -66,6 +66,7 @@ const moveElementToFirstIndex = <ELEM extends any>(list: ELEM[], entryIndex: num
 const removeElementAtindexes = <ELEM extends any>(list: ELEM[], entryindexes: number[]) => {
   if (!isValidEntryindexes(list, entryindexes)) return list; // invalid index
   const output = [...list];
+  // @ts-ignore
   return output.filter((item, index) => {
     return entryindexes.includes(index) == false;
   });
