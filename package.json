@@ -1,6 +1,6 @@
 {
   "name": "km-list",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "easy work on array",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
