@@ -1,4 +1,4 @@
 import lib from './lib';
-const packageTemplateStarter = lib;
-export default packageTemplateStarter;
+const kmList = lib;
+export default kmList;
 export * from './lib';
