@@ -1,24 +1,77 @@
 import _ from 'lodash';
 
-type IIndexMode = 'inReserved' | 'outOfReserved';
+type IIndexMode = 'in-scope' | 'back-of-scope' | 'next-of-scope';
 
+const getLastIndex = <ELEM extends any>(list: ELEM[]) => {
+  if (list.length == 0) return 'empty'; // empty list
+  if (list.length == 1) return 0; // single element list
+  if (list.length > 1) return list.length - 1; // multi element list
+  return 'empty'; // default
+};
+const getFirstIndex = <ELEM extends any>(list: ELEM[]) => {
+  if (list.length == 0) return 'empty'; // empty list
+  if (list.length == 1) return 0; // single element list
+  if (list.length > 1) return 0; // multi element list
+  return 'empty'; // default
+};
 const getIndexMode = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  let output: IIndexMode = 'outOfReserved';
+  let output: IIndexMode = 'back-of-scope';
   if (list.length == 0) {
-    output = 'outOfReserved'; // empty list
-  } // empty list
-  if (entryIndex < 0) {
-    output = 'outOfReserved'; // empty list
+    if (entryIndex > 0) {
+      output = 'next-of-scope'; // empty list
+    }
+    if (entryIndex < 0) {
+      output = 'back-of-scope'; // empty list
+    }
+  }
+  if (entryIndex < list.length && entryIndex >= 0) {
+    output = 'in-scope'; // in-scope
+  }
+  // empty list
+  else if (entryIndex < 0) {
+    output = 'back-of-scope'; // negative index
   } // negative index
-  if (entryIndex >= list.length) {
-    output = 'outOfReserved'; // empty list
+  else if (entryIndex >= list.length) {
+    output = 'next-of-scope'; // index out of bounds
   } // index out of bounds
-  if (entryIndex < list.length) {
-    output = 'inReserved'; // empty list
-  } // index out of bounds
+
   return output;
 };
-
+const makeValidIndex = <ELEM extends any>(
+  list: ELEM[],
+  entryIndex: number,
+  onEdge: boolean = false
+) => {
+  const indexMode = getIndexMode(list, entryIndex);
+  const lastIndex = getLastIndex(list);
+  let output;
+  if (onEdge == true) {
+    if (indexMode == 'back-of-scope') {
+      output = -1; // negative index
+    } else if (indexMode == 'next-of-scope') {
+      if (lastIndex == 'empty') {
+        output = 0; // empty list
+      } else {
+        output = lastIndex + 1; // index out of bounds
+      }
+    } else {
+      output = entryIndex; // in-scope
+    }
+  } else {
+    if (indexMode == 'back-of-scope') {
+      output = 0; // negative index
+    } else if (indexMode == 'next-of-scope') {
+      if (lastIndex == 'empty') {
+        output = 0; // empty list
+      } else {
+        output = lastIndex; // index out of bounds
+      }
+    } else {
+      output = entryIndex; // in-scope
+    }
+  }
+  return output;
+};
 const isValidEntryIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   let output = false;
   if (list.length == 0) output = false; // empty list
@@ -30,7 +83,6 @@ const isValidEntryIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) =
   console.log('isValidEntryIndex', output);
   return output;
 };
-
 const isValidEntryIndexes = <ELEM extends any>(
   list: ELEM[],
   entryIndexes: number[],
@@ -50,7 +102,6 @@ const isValidEntryIndexes = <ELEM extends any>(
     return isValid;
   }
 };
-
 const getValidEntryIndexes = <ELEM extends any>(list: ELEM[], entryIndexes: number[]) => {
   if (list.length == 0) return []; // empty list
   if (entryIndexes.length == 0) return []; // empty index array
@@ -59,20 +110,17 @@ const getValidEntryIndexes = <ELEM extends any>(list: ELEM[], entryIndexes: numb
   });
   return output; // valid index array
 };
-
 // swap elements
 const swapElements = <ELEM extends any>(list: ELEM[], from: number, to: number) => {
-  if (!isValidEntryIndex(list, from)) return list; // invalid from index
-  if (!isValidEntryIndex(list, to)) return list; // invalid to index
-  else if (from == to) return list; // same index
-  else {
-    const output = [...list];
-    const fromElem = output[from];
-    const toElem = output[to];
-    output[from] = toElem;
-    output[to] = fromElem;
-    return output;
-  }
+  if (from == to) return list; // same index
+  const validFromIndex = makeValidIndex(list, from);
+  const validToIndex = makeValidIndex(list, to);
+  const output = [...list];
+  const fromElem = output[validFromIndex];
+  const toElem = output[validToIndex];
+  output[validFromIndex] = toElem;
+  output[validToIndex] = fromElem;
+  return output;
 };
 const moveElementToNextIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   return swapElements(list, entryIndex, entryIndex + 1);
@@ -80,26 +128,20 @@ const moveElementToNextIndex = <ELEM extends any>(list: ELEM[], entryIndex: numb
 const moveElementToBackIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   return swapElements(list, entryIndex, entryIndex - 1);
 };
-const moveElementToLastIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  return swapElements(list, entryIndex, list.length - 1);
-};
 const moveElementToFirstIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   return swapElements(list, entryIndex, 0);
 };
+const moveElementToLastIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
+  return swapElements(list, entryIndex, list.length - 1);
+};
 // remove element
 const removeElementAtIndexes = <ELEM extends any>(list: ELEM[], entryIndexes: number[]) => {
-  if (!isValidEntryIndexes(list, entryIndexes)) return list; // invalid index
+  if (!isValidEntryIndexes(list, entryIndexes, false)) return list; // invalid index
   const output = [...list];
   // @ts-ignore
   return output.filter((item, index) => {
     return entryIndexes.includes(index) == false;
   });
-};
-const removeElementAtLastIndex = <ELEM extends any>(list: ELEM[]) => {
-  return removeElementAtIndexes(list, [list.length - 1]); // remove element at last index
-};
-const removeElementAtFirstIndex = <ELEM extends any>(list: ELEM[]) => {
-  return removeElementAtIndexes(list, [0]); // remove element at first index
 };
 const removeElementAfterThisIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   return removeElementAtIndexes(list, [entryIndex + 1]); // remove element at index
@@ -107,58 +149,86 @@ const removeElementAfterThisIndex = <ELEM extends any>(list: ELEM[], entryIndex:
 const removeElementBeforeThisIndex = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   return removeElementAtIndexes(list, [entryIndex - 1]); // remove element at index
 };
-// insert element
-const insertElementAfterThisIndex = <ELEM extends any>(
+const removeElementAtFirstIndex = <ELEM extends any>(list: ELEM[]) => {
+  return removeElementAtIndexes(list, [0]); // remove element at first index
+};
+const removeElementAtLastIndex = <ELEM extends any>(list: ELEM[]) => {
+  return removeElementAtIndexes(list, [list.length - 1]); // remove element at last index
+};
+
+// add element
+const addElementAfterThisIndex = <ELEM extends any>(
   list: ELEM[],
   entryIndex: number,
   element: ELEM
 ) => {
-  if (!isValidEntryIndex(list, entryIndex)) return list; // invalid index
+  const validEntryIndex = makeValidIndex(list, entryIndex, true);
   let output = [...list];
   // @ts-ignore
   let listUntilEntryIndex = output.filter((item, index) => {
-    return index <= entryIndex;
+    return index <= validEntryIndex;
   });
   // @ts-ignore
   let listAfterEntryIndex = output.filter((item, index) => {
-    return index > entryIndex;
+    return index > validEntryIndex;
   });
-  output = [...listUntilEntryIndex, element, ...listAfterEntryIndex] as ELEM[]; // insert element at index
+  output = [...listUntilEntryIndex, element, ...listAfterEntryIndex] as ELEM[]; // add element at index
   return output;
 };
-const insertElementAtLastIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
-  return insertElementAfterThisIndex(list, list.length, element); // insert element at last index
-};
-const insertElementAtFirstIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
-  return insertElementAfterThisIndex(list, -1, element); // insert element at first index
-};
-
-const insertElementBeforeThisIndex = <ELEM extends any>(
+const addElementBeforeThisIndex = <ELEM extends any>(
   list: ELEM[],
   entryIndex: number,
   element: ELEM
 ) => {
-  return insertElementAfterThisIndex(list, entryIndex - 1, element); // insert element at index
+  return addElementAfterThisIndex(list, entryIndex - 1, element); // add element at index
+};
+const addElementAtFirstIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
+  return addElementAfterThisIndex(list, -1, element); // add element at first index
+};
+const addElementAtLastIndex = <ELEM extends any>(list: ELEM[], element: ELEM) => {
+  return addElementAfterThisIndex(list, list.length, element); // add element at last index
 };
 
 const isFirstElement = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  if (!isValidEntryIndex(list, entryIndex)) return false; // invalid index
-  if (entryIndex == 0) return true; // first index
-  return false; // not first index
+  let firstIndex = getFirstIndex(list);
+  let output = false;
+  if (firstIndex == entryIndex) {
+    output = true; // first index
+  } else {
+    output = false;
+  }
+  return output;
 };
 const isLastElement = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
-  if (!isValidEntryIndex(list, entryIndex)) return false; // invalid index
-  if (entryIndex == list.length - 1) return true; // last index
-  return false; // not last index
+  let lastIndex = getLastIndex(list);
+  let output = false;
+  if (lastIndex == entryIndex) {
+    output = true; // last index
+  } else {
+    output = false;
+  }
+  return output;
 };
 
 const firstElement = <ELEM extends any>(list: ELEM[]) => {
-  if (list.length == 0) return undefined; // empty list
-  return list[0]; // first element
+  let output = undefined;
+  let firstIndex = getFirstIndex(list);
+  if (firstIndex == 'empty') {
+    output = undefined;
+  } else {
+    output = list[firstIndex as number]; // last element
+  }
+  return output;
 };
 const lastElement = <ELEM extends any>(list: ELEM[]) => {
-  if (list.length == 0) return undefined; // empty list
-  return list[list.length - 1]; // last element
+  let output = undefined;
+  let lastIndex = getLastIndex(list);
+  if (lastIndex == 'empty') {
+    output = undefined;
+  } else {
+    output = list[lastIndex as number]; // last element
+  }
+  return output;
 };
 const selectElement = <ELEM extends any>(list: ELEM[], entryIndex: number) => {
   // @ts-ignore
@@ -202,24 +272,27 @@ const dropElementsFromRight = <ELEM extends any>(list: ELEM[], count: number) =>
 };
 
 export default {
+  getLastIndex,
+  getFirstIndex,
   getIndexMode,
+  makeValidIndex,
   isValidEntryIndex,
   isValidEntryIndexes,
   getValidEntryIndexes,
   swapElements,
   moveElementToNextIndex,
   moveElementToBackIndex,
-  moveElementToLastIndex,
   moveElementToFirstIndex,
+  moveElementToLastIndex,
   removeElementAtIndexes,
-  removeElementAtLastIndex,
-  removeElementAtFirstIndex,
   removeElementAfterThisIndex,
   removeElementBeforeThisIndex,
-  insertElementAfterThisIndex,
-  insertElementAtLastIndex,
-  insertElementAtFirstIndex,
-  insertElementBeforeThisIndex,
+  removeElementAtFirstIndex,
+  removeElementAtLastIndex,
+  addElementAfterThisIndex,
+  addElementBeforeThisIndex,
+  addElementAtFirstIndex,
+  addElementAtLastIndex,
   isFirstElement,
   isLastElement,
   firstElement,
